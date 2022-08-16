@@ -100,4 +100,5 @@ d = scipy.cluster.hierarchy.linkage(distmatrix)
 
 sns.set(font_scale=0.5)
 sns.clustermap(matrixframe, linewidths=0, cmap="RdBu_r", vmin=N, annot=True, annot_kws={"size": 6}, row_linkage=d, col_linkage=d)
+plt.savefig(args.relation+".svg")
 plt.show()
