@@ -1,4 +1,4 @@
-# Sierra-Patev et. al. 2022 script repository
+# Sierra-Patev et. al. (2022) script repository
 Repository for: Sean Sierra-Patev, Byoungnam Min, Miguel Naranjo-Ortiz, Brian Looney, Zachary Konkel, Jason C. Slot, Yuichi Sakamoto, Jacob Steenwyk, Antonis Rokas, Juan Carro, Susana Camarero, Patricia Ferreira, Gonzalo Molpeceres, Francisco J. Ruiz-Dueñas, Ana Serrano, Bernard Henrissat, Karen W. Hughes, Juan L. Mata, Noemia Kazue Ishikawa, Ruby Vargas-Isla, Shuji Ushijima, Chris A. Smith, Steven Ahrendt, Willian Andreopoulos, Guifen He, Kurt LaButti, Anna Lipzen, Vivian Ng, Robert Riley, Laura Sandor, Kerrie Barry, Angel Martinez, Yang Xiao, John G. Gibbons, Kazuhisa Terashima, Igor V. Grigoriev, and David Hibbett. A Global Phylogenomic Analysis of the Shiitake Genus Lentinula.
 
 Orthoheatmap.py
