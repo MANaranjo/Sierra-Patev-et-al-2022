@@ -1,0 +1,73 @@
+
+
+data='./'
+module load bowtie2
+module load samtools
+module load bcftools
+
+#Download Split SRA file
+
+fastq-dump -I --split-files --gzip SRR3504592
+
+#Build bowtie index
+
+bowtie2-build TMI1172.fasta TMI_ITS
+
+#Create sorted BAM
+readarray list < ./genomes.ref
+
+for i in ${list[@]}
+  do
+  bowtie2 --sensitive -x TMI_ITS -1 ${i}R1_val_1.fastq.gz -2 ${i}R2_val_2.fastq.gz | samtools view -bSu - | samtools sort - -o ${i}.sort
+  wait
+done
+
+#Index the reference genome
+
+samtools faidx ITS_ref.fasta
+
+#Next convert sorted bam to vcf
+
+readarray list < ./genomes.ref
+
+for i in ${list[@]}
+  do
+  samtools mpileup -uf ITS_ref.fasta  ${i}.sort | bcftools call -c -Oz -o ${i}_2.vcf.gz
+  wait
+done
+
+#Unzip those vcf files too
+
+readarray list < ./genomes.ref
+
+for i in ${list[@]}
+  do
+  gunzip -c ${i}_2.vcf.gz > ${i}_2.vcf
+  wait
+done
+
+#Make fastq
+
+for i in ${list[@]}
+  do
+  vcfutils.pl vcf2fq ${i}_2.vcf > ${i}_2.fastq
+  wait
+done
+
+#Replace the title of the FASTQ with the actual isolate name
+
+for i in ${list[@]}
+  do
+  sed -i "s#TMI1172#${i}#" ${i}_2.fastq
+  wait
+done
+
+#FASTQ-FASTA name
+
+readarray list < /home/spatev/workdir/CoV-2_readvis/rawreads/genomes
+
+for i in ${list[@]}
+  do
+  seqtk seq -a ${i}.fastq > ${i}.fasta
+  wait
+done

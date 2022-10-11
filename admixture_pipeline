@@ -1,0 +1,50 @@
+
+
+conda activate plink
+
+plink --aec --out WEST --vcf WEST_filtered.recode.vcf
+
+## --aec means allow exra chromosomes
+
+cat WEST.fam | awk '{print $1}' > WEST.pop
+
+cat WEST.fam | awk '{print $1,$2}' > WEST.list
+
+#make indiv file by hand from
+
+cat EAST3.pop | awk '{print ","$1}' > EAST3.indiv
+
+sed -i 's/scaffold_//' WEST.bim
+
+# filter with:
+
+plink --bfile WEST --geno 0.1 --chr-set 67 no-xy --make-bed --out WEST2
+
+
+#10/3/21
+#thin raw SNPs with plink like in admixture manual
+
+#####but first fix the var-IDs######
+
+plink --bfile rawdata --geno 0.1 --chr-set 92 no-xy --set-missing-var-ids @:#[b37] --make-bed --out raw2
+
+plink --aec --chr-set 92 no-xy --bfile raw2 --indep-pairwise 50 10 0.1
+
+## try just –indep ##
+
+plink --aec --chr-set 92 no-xy --bfile ../plinkfilter/raw2 --indep 50 5 2
+
+plink --aec --chr-set 92 no-xy --bfile raw2 --extract plink.prune.in --make-bed --recode --out prunedData
+
+##if you want to get a new thinned VCF
+
+plink --bfile plinkfiltered --export vcf --out contigsplinkfiltered
+
+#run ADMIXTURE
+
+conda activate admixture
+
+for k in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+  do
+  admixture -j40 --cv WEST.bed $k | tee pop${k}.out
+done

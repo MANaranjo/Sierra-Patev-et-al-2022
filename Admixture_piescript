@@ -1,0 +1,18 @@
+#PIE CHARTS
+#Add one column to another file (of columns)
+
+cut -d ' ' -f 1 EAST3.fam | paste EAST3.5.Q - > EAST3.admix
+
+#Or for tab delineator
+
+cut -d$'\t' -f 1 contigs.fam | paste contigs.2.Q - > contigs.admix
+
+#generate many individual files containing the R script
+
+awk '{print "A <- c("$1",",$2") \n cols <- c(\"red\", \"yellow\") \n png(file=\""$3".png\") \n pie(A, col=cols, cex=0.8) \n"}' contigs.admix >> rscriptcontigs.txt
+
+split -d -l 5 rscriptcontigs.txt rscriptcontigs
+
+#then execute them all with R
+
+rscript rscriptcontigs*

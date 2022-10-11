@@ -1,0 +1,98 @@
+
+
+
+
+# tally
+readarray list < genomes.txt
+
+for i in ${list[@]}
+  do
+  /opt/reaper-15-065/tally -i  ${i}_R1.fastq.gz -j ${i}_R2.fastq.gz --pair-by-offset --with-quality -o ./tallied/${i}_R1.fastq.gz -p ./tallied/${i}_R2.fastq.gz                                                                  wait
+done
+
+
+# trimgalore
+readarray list < genomes.txt
+
+for i in ${list[@]}
+  do
+  /opt/TrimGalore-0.4.3/trim_galore --illumina --stringency 1 --gzip -q 30 --length 50 -o ./trimmed/ --paired ${i}_R1.fastq.gz ${i}_R2.fastq.gz
+  wait
+done
+
+
+# BWA mem & samtools - - - - - sbatch with --mem=200G
+
+module load samtools
+
+genome=../index/Lenedo1_AssemblyScaffolds_Repeatmasked.fasta.gz
+
+/home/spatev/Programs/bwa-0.7.17/bwa index $genome
+
+readarray list < genomes.txt
+
+for i in ${list[@]}
+  do
+  /home/spatev/Programs/bwa-0.7.17/bwa mem -M -t 16 $genome  ./tallied/trimmed/spadescleaned/${i}_R1_val_1.fq.00.0_0.cor.fastq.gz ./tallied/trimmed/spadescleaned/${i}_R2_val_2.fq.00.0_0.cor.fastq.gz | samtools view -buS - > ../mapping/${i}.bam
+  wait
+done
+
+# Samtools sort
+
+module load bowtie2
+module load samtools
+
+readarray list < genomes.txt
+
+for i in ${list[@]}
+  do
+  samtools sort -o ./${i}.sort ${i}.bam
+  wait
+done
+
+# Add read groups
+
+module load bamaddrg
+
+readarray list < genomes.txt
+
+for i in ${list[@]}
+  do
+  bamaddrg -b ${i}.sort -s ${i} -r group.s${i} > ${i}.sort.bam
+  wait
+done
+
+
+# Index
+
+readarray list < genomes.txt
+
+for i in ${list[@]}
+  do
+  samtools index -@ 40 ${i}.sort.bam
+  wait
+done
+
+# Index reference
+
+module load samtools
+samtools faidx ../../../LboTFB7810_1_AssemblyScaffolds_Repeatmasked.fasta
+
+# Call SNPs
+
+ref="../index/Lenedo1_AssemblyScaffolds_Repeatmasked.fasta"
+
+freebayes-parallel <(fasta_generate_regions.py ${ref}.fai 10000) 40 --fasta-reference ${ref} -C 10 --bam-list ../freebayes/bam.fofn >outputC10.vcf
+
+# Filter
+
+module load vcftools/0.1.14
+
+/opt/vcftools_0.1.13/bin/vcftools --vcf outputC10.vcf --thin 5000 --remove-filtered-all --max-missing-count 6 --maf 0.03 --recode --recode-INFO-all --out ./filtered/Edsl_filtered
+
+
+# Vcf to MultiFASTA
+
+Conda activate vcfkit
+
+vk phylo fasta EDSL_filtered.recode.vcf > EDSL_filtered.fasta
